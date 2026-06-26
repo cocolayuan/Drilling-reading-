@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engoo 逐词音标 · 10 天精读日历</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1ED;
+    --surface:#FAFCFA;
+    --ink:#1C1E1B;
+    --ink-soft:#5C625B;
+    --hair:#D6DAD4;
+    --teal:#0E7C73;      --teal-bg:rgba(14,124,115,.13);
+    --coral:#C24A38;     --coral-bg:rgba(194,74,56,.13);
+    --slate:#3F6CA8;     --slate-bg:rgba(63,108,168,.13);
+    --amber:#B57A12;     --amber-bg:rgba(181,122,18,.16); --amber-ink:#8A5E0E;
+    --indigo:#5B4B95;    --indigo-bg:rgba(91,75,149,.15);
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Hanken Grotesk","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:0 22px 90px;}
+
+  /* ---------- View routing ---------- */
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Hero ---------- */
+  header.hero{padding:54px 0 26px;}
+  .eyebrow{
+    font-size:.74rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--teal); margin:0 0 18px;
+  }
+  h1{
+    font-family:"Gentium Book Plus",serif; font-weight:700;
+    font-size:clamp(2.5rem,1.7rem+3.6vw,4rem); line-height:1.02;
+    margin:0 0 14px; letter-spacing:-.01em;
+  }
+  h1 .ph-tint{color:var(--amber-ink);}
+  .lede{font-size:1.02rem; color:var(--ink-soft); max-width:48ch; margin:0;}
+  .source{
+    margin-top:22px; font-size:.82rem; color:var(--ink-soft);
+    border-left:2px solid var(--hair); padding-left:12px;
+  }
+
+  /* ---------- Progress meter ---------- */
+  .progress{margin-top:26px;}
+  .progress .pbar{height:8px; border-radius:99px; background:#E0E4DE; overflow:hidden;}
+  .progress .pfill{height:100%; background:var(--teal); border-radius:99px;}
+  .progress .ptext{margin-top:7px; font-size:.82rem; color:var(--ink-soft);}
+  .progress .ptext b{color:var(--teal); font-weight:700;}
+
+  /* ---------- Calendar grid ---------- */
+  .cal-head{padding:34px 0 4px;}
+  .cal-head h2{
+    font-family:"Gentium Book Plus",serif; font-weight:700;
+    font-size:clamp(1.5rem,1.3rem+1vw,2rem); margin:0 0 6px;
+  }
+  .cal-head p{margin:0; color:var(--ink-soft); font-size:.92rem;}
+  .cal-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr));
+    gap:16px; margin-top:22px;
+  }
+  .day-card{
+    display:block; text-decoration:none; color:inherit;
+    background:var(--surface); border:1px solid var(--hair); border-radius:16px;
+    padding:18px 18px 20px; border-left:4px solid var(--hair);
+    transition:box-shadow .18s, transform .12s, border-color .18s;
+  }
+  a.day-card.filled{border-left-color:var(--teal); cursor:pointer;}
+  a.day-card.filled:hover{transform:translateY(-2px); box-shadow:0 14px 30px -20px rgba(0,0,0,.6);}
+  a.day-card.filled:focus-visible{outline:2.5px solid var(--ink); outline-offset:2px;}
+  .day-card.today{background:var(--teal-bg); border-left-color:var(--teal);}
+  .day-card.placeholder{opacity:.7;}
+  .dc-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:11px;}
+  .dc-date{font-family:"Gentium Book Plus",serif; font-size:1.02rem; font-weight:700;}
+  .dc-date .dow{color:var(--ink-soft); font-weight:400; font-size:.88rem; margin-left:.4em;}
+  .dc-daytag{
+    font-size:.66rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft); background:var(--paper); border:1px solid var(--hair);
+    border-radius:99px; padding:.15em .6em;
+  }
+  .day-card.today .dc-daytag{color:#fff; background:var(--teal); border-color:var(--teal);}
+  .dc-badges{display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:9px;}
+  .badge{font-size:.68rem; font-weight:700; letter-spacing:.04em; border-radius:99px; padding:.15em .6em;}
+  .badge.lv{background:var(--coral-bg); color:var(--coral);}
+  .badge.topic{background:var(--slate-bg); color:var(--slate);}
+  .badge.muted{background:var(--paper); color:var(--ink-soft); border:1px solid var(--hair);}
+  .dc-title{font-size:1.02rem; font-weight:700; line-height:1.32; margin:0 0 4px;}
+  .dc-zh{font-size:.86rem; color:var(--ink-soft); margin:0 0 12px;}
+  .dc-cta{font-size:.84rem; font-weight:700; color:var(--teal);}
+  .dc-empty{font-size:.86rem; color:var(--ink-soft); font-style:italic; margin:2px 0 0;}
+
+  /* ---------- Back bar (in day view) ---------- */
+  .backbar{
+    position:sticky; top:0; z-index:30; margin:0 0 4px; padding:16px 0 12px;
+    background:color-mix(in srgb, var(--paper) 88%, transparent);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hair);
+  }
+  .backbar a{
+    display:inline-flex; align-items:center; gap:.4em; text-decoration:none;
+    font-size:.9rem; font-weight:600; color:var(--teal);
+    border:1.5px solid var(--hair); background:var(--surface);
+    border-radius:99px; padding:.4rem .9rem; transition:border-color .15s, background .15s;
+  }
+  .backbar a:hover{border-color:var(--teal); background:var(--teal-bg);}
+  .backbar a:focus-visible{outline:2.5px solid var(--ink); outline-offset:2px;}
+
+  /* ---------- Day hero (compact) ---------- */
+  header.dayhero{padding:26px 0 22px;}
+  header.dayhero .eyebrow{margin-bottom:12px;}
+  header.dayhero h1{font-size:clamp(1.9rem,1.5rem+2vw,2.9rem);}
+
+  /* ---------- Sticky toolbar ---------- */
+  .toolbar{
+    position:sticky; top:58px; z-index:20;
+    margin:18px 0 8px; padding:14px 0;
+    background:color-mix(in srgb, var(--paper) 86%, transparent);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hair);
+  }
+  .toolbar .tlabel{
+    font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0 0 9px;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:.5rem;}
+  button.chip{
+    font:inherit; font-size:.9rem; font-weight:600;
+    padding:.5rem .9rem; border-radius:999px;
+    border:1.5px solid var(--hair); background:var(--surface); color:var(--ink-soft);
+    cursor:pointer; transition:background .16s, color .16s, border-color .16s, transform .1s;
+  }
+  button.chip:hover{transform:translateY(-1px);}
+  button.chip:focus-visible{outline:2.5px solid var(--ink); outline-offset:2px;}
+  .chip[data-fx="clean"][aria-pressed="true"]{border-color:var(--ink); color:var(--ink); background:#E3E7E1;}
+  .chip[data-fx="darkl"][aria-pressed="true"]{border-color:var(--teal); color:var(--teal); background:var(--teal-bg);}
+  .chip[data-fx="voice"][aria-pressed="true"]{border-color:var(--coral); color:var(--coral); background:var(--coral-bg);}
+  .chip[data-fx="vowel"][aria-pressed="true"]{border-color:var(--amber); color:var(--amber-ink); background:var(--amber-bg);}
+  .legend{
+    display:flex; flex-wrap:wrap; gap:.4rem 1.3rem; align-items:center;
+    margin-top:11px; font-size:.84rem; color:var(--ink-soft); min-height:1.2em;
+  }
+  .legend .sw{display:inline-block; width:.72em; height:.72em; border-radius:3px; margin-right:.4em; vertical-align:-.05em;}
+  .legend .dash-key{border-bottom:2px dashed var(--teal); padding-bottom:1px;}
+  .legend b{color:var(--ink); font-weight:700;}
+
+  /* ---------- Paragraphs ---------- */
+  .para{padding:30px 0 6px; border-bottom:1px solid var(--hair);}
+  .para:last-of-type{border-bottom:none;}
+  .para-no{
+    font-family:"Gentium Book Plus",serif; font-size:.95rem; color:var(--ink-soft);
+    letter-spacing:.04em; margin:0 0 14px;
+  }
+  .para-no b{color:var(--teal); font-weight:700; margin-right:.5em;}
+  .stanza{display:flex; flex-wrap:wrap; align-items:flex-start; gap:.15rem .05rem;}
+
+  .word{
+    display:inline-flex; flex-direction:column; align-items:center; gap:.12em;
+    padding:.34em .42em .4em; border-radius:10px; cursor:pointer;
+    transition:background .15s, box-shadow .15s; border:none; background:none; text-align:center;
+  }
+  .word .en{
+    font-weight:600; font-size:clamp(1rem,.96rem+.35vw,1.16rem);
+    color:var(--ink); letter-spacing:-.005em; line-height:1.2;
+  }
+  .word .ipa{
+    font-family:"Gentium Book Plus",serif; font-size:clamp(.92rem,.88rem+.3vw,1.04rem);
+    color:var(--ink-soft); line-height:1.2; white-space:nowrap;
+  }
+  .word:hover{background:var(--surface); box-shadow:0 1px 0 var(--hair), 0 10px 22px -16px rgba(0,0,0,.5);}
+  .word:focus-visible{outline:2.5px solid var(--ink); outline-offset:2px;}
+  .word.speaking{background:var(--teal-bg);}
+  .word .num{font-variant-numeric:tabular-nums;}
+
+  .punct{
+    align-self:flex-start; padding-top:.42em; margin-left:-.12em;
+    font-family:"Gentium Book Plus",serif; color:var(--ink-soft);
+    font-size:1.05rem; user-select:none;
+  }
+  .punct.dash{padding:0 .2em; align-self:center; padding-top:.5em;}
+
+  /* phoneme tags — only lit when matching focus class is active */
+  .ph{border-radius:4px; padding:0 .04em; transition:background .25s, color .25s;}
+  .reader.fx-darkl .ph.darkl{color:var(--teal); background:var(--teal-bg);}
+  .reader.fx-darkl .word.silentl .en{color:var(--teal); border-bottom:2px dashed var(--teal);}
+  .reader.fx-voice .ph.voiced{color:var(--coral); background:var(--coral-bg);}
+  .reader.fx-voice .ph.voiceless{color:var(--slate); background:var(--slate-bg);}
+  .reader.fx-vowel .ph.vi{color:var(--amber-ink); background:var(--amber-bg);}
+  .reader.fx-vowel .ph.vai{color:var(--indigo); background:var(--indigo-bg); font-weight:700;}
+
+  /* ---------- Drill cards ---------- */
+  .drill-head{padding:46px 0 4px;}
+  .drill-head h2{
+    font-family:"Gentium Book Plus",serif; font-weight:700;
+    font-size:clamp(1.7rem,1.4rem+1.4vw,2.3rem); margin:0 0 8px; letter-spacing:-.01em;
+  }
+  .drill-head p{margin:0; color:var(--ink-soft); font-size:.96rem; max-width:50ch;}
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(265px,1fr)); gap:18px; margin-top:26px;}
+  .card{
+    background:var(--surface); border:1px solid var(--hair); border-radius:16px;
+    padding:22px 22px 24px; border-top:4px solid var(--tag);
+  }
+  .card.t-darkl{--tag:var(--teal);}
+  .card.t-voice{--tag:var(--coral);}
+  .card.t-vowel{--tag:var(--amber);}
+  .card.t-link{--tag:var(--indigo);}
+  .card .tag{
+    font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--tag); margin:0 0 4px;
+  }
+  .card h3{font-size:1.18rem; margin:0 0 14px; font-weight:700; letter-spacing:-.01em;}
+  .row{margin:0 0 13px;}
+  .row:last-child{margin-bottom:0;}
+  .row .rl{font-size:.82rem; color:var(--ink-soft); margin:0 0 5px; font-weight:600;}
+  .terms{display:flex; flex-wrap:wrap; gap:.3rem .35rem;}
+  .term{
+    display:inline-flex; align-items:baseline; gap:.32em; cursor:pointer;
+    background:var(--paper); border:1px solid var(--hair); border-radius:8px;
+    padding:.26em .5em; transition:background .14s, box-shadow .14s; text-align:left;
+    font:inherit;
+  }
+  .term:hover{background:#fff; box-shadow:0 6px 16px -14px rgba(0,0,0,.6);}
+  .term:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+  .term.speaking{background:var(--teal-bg);}
+  .term .te{font-weight:600; font-size:.96rem;}
+  .term .ti{font-family:"Gentium Book Plus",serif; font-size:.9rem; color:var(--ink-soft);}
+  .tip{
+    margin:14px 0 0; padding:11px 13px; border-radius:10px;
+    background:var(--paper); font-size:.85rem; color:var(--ink-soft); line-height:1.55;
+  }
+  .tip strong{color:var(--ink);}
+  .pair{display:flex; flex-wrap:wrap; gap:.45rem; font-family:"Gentium Book Plus",serif;}
+
+  /* ---------- Footer ---------- */
+  footer{margin-top:40px; padding-top:22px; border-top:1px solid var(--hair); color:var(--ink-soft); font-size:.85rem;}
+  footer .k{display:inline-block; background:var(--surface); border:1px solid var(--hair); border-radius:6px; padding:.05em .4em; font-size:.8rem;}
+  .nospeak{display:none; margin-top:10px; color:var(--coral); font-size:.82rem;}
+
+  @media (max-width:560px){
+    .wrap{padding:0 16px 70px;}
+    header.hero{padding:38px 0 18px;}
+    .word{padding:.3em .34em .36em;}
+    .toolbar{top:54px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important; animation:none !important; scroll-behavior:auto !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  VIEW: CALENDAR  (landing / 汇总入口)                      ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div class="view" id="view-calendar">
+  <div class="wrap">
+
+    <header class="hero">
+      <p class="eyebrow">Engoo Daily News · Level 5 · 逐词音标精读</p>
+      <h1>Read aloud,<br><span class="ph-tint">day by day.</span></h1>
+      <p class="lede">每天一篇 Engoo Daily News(Level 5),做成逐词美式音标精读。点下面任意一天进入当天精读;十天后在这一页统一回顾——<b>一个链接,全部收录</b>。</p>
+
+      <div class="progress">
+        <div class="pbar"><div class="pfill" id="pfill" style="width:10%"></div></div>
+        <p class="ptext">已完成 <b id="pcount">1</b> / 10 篇 · 滚动 10 天计划(2026-06-26 → 2026-07-05)</p>
+      </div>
+    </header>
+
+    <section class="cal-head">
+      <h2>10-Day Plan</h2>
+      <p>点亮的卡片是已完成的精读;灰色的是待更新的日子。</p>
+    </section>
+
+    <div class="cal-grid">
+
+      <!-- DAY 1 · 2026-06-26 · FILLED -->
+      <a class="day-card filled today" href="#day-2026-06-26">
+        <div class="dc-top">
+          <span class="dc-date">Jun 26<span class="dow">周五</span></span>
+          <span class="dc-daytag">Today · Day 1</span>
+        </div>
+        <div class="dc-badges">
+          <span class="badge lv">Level 5</span>
+          <span class="badge topic">Business &amp; Tech</span>
+        </div>
+        <p class="dc-title">Is AI "one big bubble"?</p>
+        <p class="dc-zh">科技股大跌,投资者担心 AI 热潮涨得太快</p>
+        <span class="dc-cta">进入精读 →</span>
+      </a>
+
+      <!-- DAY 2 · 2026-06-27 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jun 27<span class="dow">周六</span></span>
+          <span class="dc-daytag">Day 2</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 3 · 2026-06-28 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jun 28<span class="dow">周日</span></span>
+          <span class="dc-daytag">Day 3</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 4 · 2026-06-29 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jun 29<span class="dow">周一</span></span>
+          <span class="dc-daytag">Day 4</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 5 · 2026-06-30 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jun 30<span class="dow">周二</span></span>
+          <span class="dc-daytag">Day 5</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 6 · 2026-07-01 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jul 1<span class="dow">周三</span></span>
+          <span class="dc-daytag">Day 6</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 7 · 2026-07-02 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jul 2<span class="dow">周四</span></span>
+          <span class="dc-daytag">Day 7</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 8 · 2026-07-03 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jul 3<span class="dow">周五</span></span>
+          <span class="dc-daytag">Day 8</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 9 · 2026-07-04 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jul 4<span class="dow">周六</span></span>
+          <span class="dc-daytag">Day 9</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+      <!-- DAY 10 · 2026-07-05 -->
+      <div class="day-card placeholder">
+        <div class="dc-top">
+          <span class="dc-date">Jul 5<span class="dow">周日</span></span>
+          <span class="dc-daytag">Day 10</span>
+        </div>
+        <div class="dc-badges"><span class="badge muted">Level 5</span></div>
+        <p class="dc-empty">待更新 · 当天抓取 Engoo Level 5</p>
+      </div>
+
+    </div><!-- /.cal-grid -->
+
+    <footer>
+      <p>🔊 进入任意一天后,点单词即可听美式发音;用顶部开关聚焦 Dark&nbsp;L / 清浊辅音 / <span style="font-family:'Gentium Book Plus',serif">/ɪ/ vs /aɪ/</span>。</p>
+      <p>每天新增一篇,链接不变。键盘:<span class="k">Tab</span> 移动 · <span class="k">Enter</span>/<span class="k">Space</span> 朗读。</p>
+    </footer>
+
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  VIEW: 2026-06-26 · Is AI "one big bubble"?               ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div class="view day-view" id="day-2026-06-26">
+  <div class="backbar"><div class="wrap" style="padding-bottom:0;padding-top:0"><a href="#view-calendar">← 返回日历</a></div></div>
+  <div class="wrap">
+
+    <header class="dayhero">
+      <p class="eyebrow">Day 1 · 2026-06-26（周五）· Level 5 · Business &amp; Tech</p>
+      <h1>Is AI <span class="ph-tint">"one big bubble"</span>?</h1>
+      <p class="lede">八段精读,每个词都标了美式音标。<b>点任意单词</b>就能听发音;用下面的开关,只点亮你正在练的那一类音。</p>
+      <p class="source">素材 · Tech stocks tumble as investors worry the AI boom has grown too fast(Engoo Daily News · Level 5;综合 NPR / Bloomberg / CNBC 报道,2026 年 6 月)</p>
+    </header>
+
+    <div class="toolbar">
+      <p class="tlabel">聚焦一个音 / Focus</p>
+      <div class="chips" role="group" aria-label="选择要点亮的音">
+        <button class="chip" data-fx="clean" aria-pressed="true">清爽视图</button>
+        <button class="chip" data-fx="darkl" aria-pressed="false">Dark L</button>
+        <button class="chip" data-fx="voice" aria-pressed="false">清辅音 / 浊辅音</button>
+        <button class="chip" data-fx="vowel" aria-pressed="false">/ɪ/ vs /aɪ/</button>
+      </div>
+      <div class="legend" aria-live="polite"></div>
+    </div>
+
+    <div class="reader">
+
+      <!-- PARAGRAPH 1 -->
+      <section class="para">
+        <p class="para-no"><b>01</b>第一段 · 科技股大跌</p>
+        <div class="stanza">
+          <button class="word say" data-say="Technology"><span class="en">Technology</span><span class="ipa">tɛkˈnɑːlədʒi</span></button>
+          <button class="word say" data-say="stocks"><span class="en">stocks</span><span class="ipa">stɑːk<span class="ph voiceless">s</span></span></button>
+          <button class="word say" data-say="fell"><span class="en">fell</span><span class="ipa">fɛ<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="sharply"><span class="en">sharply</span><span class="ipa">ˈʃɑːrpli</span></button>
+          <button class="word say" data-say="last"><span class="en">last</span><span class="ipa">læst</span></button>
+          <button class="word say" data-say="week"><span class="en">week</span><span class="ipa">wiːk</span></button><span class="punct">,</span>
+          <button class="word say" data-say="and"><span class="en">and</span><span class="ipa">ænd</span></button>
+          <button class="word say" data-say="many"><span class="en">many</span><span class="ipa">ˈmɛni</span></button>
+          <button class="word say" data-say="investors"><span class="en">investors</span><span class="ipa"><span class="ph vi">ɪ</span>nˈvɛstər<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="began"><span class="en">began</span><span class="ipa">b<span class="ph vi">ɪ</span>ˈɡæn</span></button>
+          <button class="word say" data-say="to"><span class="en">to</span><span class="ipa">tuː</span></button>
+          <button class="word say" data-say="worry"><span class="en">worry</span><span class="ipa">ˈwɜːri</span></button>
+          <button class="word say" data-say="that"><span class="en">that</span><span class="ipa">ðæt</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="excitement"><span class="en">excitement</span><span class="ipa"><span class="ph vi">ɪ</span>kˈs<span class="ph vai">aɪ</span>tmənt</span></button>
+          <button class="word say" data-say="around"><span class="en">around</span><span class="ipa">əˈraʊnd</span></button>
+          <button class="word say" data-say="artificial"><span class="en">artificial</span><span class="ipa">ˌɑːrt<span class="ph vi">ɪ</span>ˈf<span class="ph vi">ɪ</span>ʃə<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="intelligence"><span class="en">intelligence</span><span class="ipa"><span class="ph vi">ɪ</span>nˈtɛl<span class="ph vi">ɪ</span>dʒəns</span></button>
+          <button class="word say" data-say="had"><span class="en">had</span><span class="ipa">hæd</span></button>
+          <button class="word say" data-say="grown"><span class="en">grown</span><span class="ipa">ɡroʊn</span></button>
+          <button class="word say" data-say="too"><span class="en">too</span><span class="ipa">tuː</span></button>
+          <button class="word say" data-say="fast"><span class="en">fast</span><span class="ipa">fæst</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 2 -->
+      <section class="para">
+        <p class="para-no"><b>02</b>第二段 · 芯片股领跌</p>
+        <div class="stanza">
+          <button class="word say" data-say="The"><span class="en">The</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="Nasdaq"><span class="en">Nasdaq</span><span class="ipa">ˈnæzdæk</span></button><span class="punct">,</span>
+          <button class="word say" data-say="an"><span class="en">an</span><span class="ipa">æn</span></button>
+          <button class="word say" data-say="index"><span class="en">index</span><span class="ipa">ˈ<span class="ph vi">ɪ</span>ndɛks</span></button>
+          <button class="word say" data-say="full"><span class="en">full</span><span class="ipa">fʊ<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="of"><span class="en">of</span><span class="ipa">əv</span></button>
+          <button class="word say" data-say="tech"><span class="en">tech</span><span class="ipa">tɛk</span></button>
+          <button class="word say" data-say="companies"><span class="en">companies</span><span class="ipa">ˈkʌmpəni<span class="ph voiced">z</span></span></button><span class="punct">,</span>
+          <button class="word say" data-say="dropped"><span class="en">dropped</span><span class="ipa">drɑːp<span class="ph voiceless">t</span></span></button>
+          <button class="word say" data-say="more"><span class="en">more</span><span class="ipa">mɔːr</span></button>
+          <button class="word say" data-say="than"><span class="en">than</span><span class="ipa">ðæn</span></button>
+          <button class="word say" data-say="two percent"><span class="en num">2%</span><span class="ipa">tuː pərˈsɛnt</span></button><span class="punct">.</span>
+          <button class="word say" data-say="Chip"><span class="en">Chip</span><span class="ipa">tʃ<span class="ph vi">ɪ</span>p</span></button>
+          <button class="word say" data-say="makers"><span class="en">makers</span><span class="ipa">ˈmeɪkər<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="were"><span class="en">were</span><span class="ipa">wɜːr</span></button>
+          <button class="word say" data-say="hit"><span class="en">hit</span><span class="ipa">h<span class="ph vi">ɪ</span>t</span></button>
+          <button class="word say" data-say="hardest"><span class="en">hardest</span><span class="ipa">ˈhɑːrd<span class="ph vi">ɪ</span>st</span></button><span class="punct">,</span>
+          <button class="word say" data-say="with"><span class="en">with</span><span class="ipa">w<span class="ph vi">ɪ</span>ð</span></button>
+          <button class="word say" data-say="one"><span class="en">one</span><span class="ipa">wʌn</span></button>
+          <button class="word say" data-say="key"><span class="en">key</span><span class="ipa">kiː</span></button>
+          <button class="word say" data-say="index"><span class="en">index</span><span class="ipa">ˈ<span class="ph vi">ɪ</span>ndɛks</span></button>
+          <button class="word say" data-say="of"><span class="en">of</span><span class="ipa">əv</span></button>
+          <button class="word say" data-say="semiconductor"><span class="en">semiconductor</span><span class="ipa">ˌsɛmikənˈdʌktər</span></button>
+          <button class="word say" data-say="stocks"><span class="en">stocks</span><span class="ipa">stɑːk<span class="ph voiceless">s</span></span></button>
+          <button class="word say" data-say="falling"><span class="en">falling</span><span class="ipa">ˈfɔːl<span class="ph vi">ɪ</span>ŋ</span></button>
+          <button class="word say" data-say="almost"><span class="en">almost</span><span class="ipa">ˈɔː<span class="ph darkl">l</span>moʊst</span></button>
+          <button class="word say" data-say="eight percent"><span class="en num">8%</span><span class="ipa">eɪt pərˈsɛnt</span></button>
+          <button class="word say" data-say="in"><span class="en">in</span><span class="ipa"><span class="ph vi">ɪ</span>n</span></button>
+          <button class="word say" data-say="a"><span class="en">a</span><span class="ipa">ə</span></button>
+          <button class="word say" data-say="single"><span class="en">single</span><span class="ipa">ˈs<span class="ph vi">ɪ</span>ŋɡə<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="day"><span class="en">day</span><span class="ipa">deɪ</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 3 -->
+      <section class="para">
+        <p class="para-no"><b>03</b>第三段 · 巨头的 AI 支出</p>
+        <div class="stanza">
+          <button class="word say" data-say="The"><span class="en">The</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="four"><span class="en">four</span><span class="ipa">fɔːr</span></button>
+          <button class="word say" data-say="biggest"><span class="en">biggest</span><span class="ipa">ˈb<span class="ph vi">ɪ</span>ɡ<span class="ph vi">ɪ</span>st</span></button>
+          <button class="word say" data-say="American"><span class="en">American</span><span class="ipa">əˈmɛr<span class="ph vi">ɪ</span>kən</span></button>
+          <button class="word say" data-say="tech"><span class="en">tech</span><span class="ipa">tɛk</span></button>
+          <button class="word say" data-say="companies"><span class="en">companies</span><span class="ipa">ˈkʌmpəni<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="plan"><span class="en">plan</span><span class="ipa">plæn</span></button>
+          <button class="word say" data-say="to"><span class="en">to</span><span class="ipa">tuː</span></button>
+          <button class="word say" data-say="spend"><span class="en">spend</span><span class="ipa">spɛnd</span></button>
+          <button class="word say" data-say="more"><span class="en">more</span><span class="ipa">mɔːr</span></button>
+          <button class="word say" data-say="than"><span class="en">than</span><span class="ipa">ðæn</span></button>
+          <button class="word say" data-say="four hundred fifty two billion"><span class="en num">$452&nbsp;billion</span><span class="ipa">fɔːr ˈhʌndrəd ˈf<span class="ph vi">ɪ</span>fti tuː ˈb<span class="ph vi">ɪ</span>ljən</span></button>
+          <button class="word say" data-say="on"><span class="en">on</span><span class="ipa">ɑːn</span></button>
+          <button class="word say" data-say="A I"><span class="en">AI</span><span class="ipa">ˌeɪˈ<span class="ph vai">aɪ</span></span></button>
+          <button class="word say" data-say="this"><span class="en">this</span><span class="ipa">ð<span class="ph vi">ɪ</span>s</span></button>
+          <button class="word say" data-say="year"><span class="en">year</span><span class="ipa">j<span class="ph vi">ɪ</span>r</span></button><span class="punct">.</span>
+          <button class="word say" data-say="But"><span class="en">But</span><span class="ipa">bʌt</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="cash"><span class="en">cash</span><span class="ipa">kæʃ</span></button>
+          <button class="word say" data-say="they"><span class="en">they</span><span class="ipa">ðeɪ</span></button>
+          <button class="word say" data-say="actually"><span class="en">actually</span><span class="ipa">ˈæktʃuəli</span></button>
+          <button class="word say" data-say="keep"><span class="en">keep</span><span class="ipa">kiːp</span></button>
+          <button class="word say" data-say="has"><span class="en">has</span><span class="ipa">hæ<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="fallen"><span class="en">fallen</span><span class="ipa">ˈfɔːlən</span></button>
+          <button class="word say" data-say="quickly"><span class="en">quickly</span><span class="ipa">ˈkw<span class="ph vi">ɪ</span>kli</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 4 -->
+      <section class="para">
+        <p class="para-no"><b>04</b>第四段 · 自由现金流骤降</p>
+        <div class="stanza">
+          <button class="word say" data-say="Alphabet's"><span class="en">Alphabet's</span><span class="ipa">ˈæ<span class="ph darkl">l</span>fəbɛt<span class="ph voiceless">s</span></span></button>
+          <button class="word say" data-say="free"><span class="en">free</span><span class="ipa">friː</span></button>
+          <button class="word say" data-say="cash"><span class="en">cash</span><span class="ipa">kæʃ</span></button>
+          <button class="word say" data-say="flow"><span class="en">flow</span><span class="ipa">floʊ</span></button>
+          <button class="word say" data-say="dropped"><span class="en">dropped</span><span class="ipa">drɑːp<span class="ph voiceless">t</span></span></button>
+          <button class="word say" data-say="by"><span class="en">by</span><span class="ipa">b<span class="ph vai">aɪ</span></span></button>
+          <button class="word say" data-say="nearly"><span class="en">nearly</span><span class="ipa">ˈn<span class="ph vi">ɪ</span>rli</span></button>
+          <button class="word say silentl" data-say="half"><span class="en">half</span><span class="ipa">hæf</span></button>
+          <button class="word say" data-say="from"><span class="en">from</span><span class="ipa">frʌm</span></button>
+          <button class="word say" data-say="a"><span class="en">a</span><span class="ipa">ə</span></button>
+          <button class="word say" data-say="year"><span class="en">year</span><span class="ipa">j<span class="ph vi">ɪ</span>r</span></button>
+          <button class="word say" data-say="earlier"><span class="en">earlier</span><span class="ipa">ˈɜːrliər</span></button><span class="punct">.</span>
+          <button class="word say" data-say="Amazon's"><span class="en">Amazon's</span><span class="ipa">ˈæməzɑːn<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="fell"><span class="en">fell</span><span class="ipa">fɛ<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="even"><span class="en">even</span><span class="ipa">ˈiːvən</span></button>
+          <button class="word say" data-say="more"><span class="en">more</span><span class="ipa">mɔːr</span></button><span class="punct">,</span>
+          <button class="word say" data-say="as"><span class="en">as</span><span class="ipa">æ<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="cost"><span class="en">cost</span><span class="ipa">kɔːst</span></button>
+          <button class="word say" data-say="of"><span class="en">of</span><span class="ipa">əv</span></button>
+          <button class="word say" data-say="building"><span class="en">building</span><span class="ipa">ˈb<span class="ph vi">ɪ</span><span class="ph darkl">l</span>d<span class="ph vi">ɪ</span>ŋ</span></button>
+          <button class="word say" data-say="huge"><span class="en">huge</span><span class="ipa">hjuːdʒ</span></button>
+          <button class="word say" data-say="data"><span class="en">data</span><span class="ipa">ˈdeɪtə</span></button>
+          <button class="word say" data-say="centers"><span class="en">centers</span><span class="ipa">ˈsɛntər<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="kept"><span class="en">kept</span><span class="ipa">kɛpt</span></button>
+          <button class="word say" data-say="rising"><span class="en">rising</span><span class="ipa">ˈr<span class="ph vai">aɪ</span>z<span class="ph vi">ɪ</span>ŋ</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 5 -->
+      <section class="para">
+        <p class="para-no"><b>05</b>第五段 · "一个大泡沫"?</p>
+        <div class="stanza">
+          <button class="word say" data-say="Some"><span class="en">Some</span><span class="ipa">sʌm</span></button>
+          <button class="word say" data-say="analysts"><span class="en">analysts</span><span class="ipa">ˈænəl<span class="ph vi">ɪ</span>st<span class="ph voiceless">s</span></span></button>
+          <button class="word say" data-say="now"><span class="en">now</span><span class="ipa">naʊ</span></button>
+          <button class="word say" data-say="ask"><span class="en">ask</span><span class="ipa">æsk</span></button>
+          <button class="word say" data-say="whether"><span class="en">whether</span><span class="ipa">ˈwɛðər</span></button>
+          <button class="word say" data-say="A I"><span class="en">AI</span><span class="ipa">ˌeɪˈ<span class="ph vai">aɪ</span></span></button>
+          <button class="word say" data-say="is"><span class="en">is</span><span class="ipa"><span class="ph vi">ɪ</span><span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="one"><span class="en">one</span><span class="ipa">wʌn</span></button>
+          <button class="word say" data-say="big"><span class="en">big</span><span class="ipa">b<span class="ph vi">ɪ</span>ɡ</span></button>
+          <button class="word say" data-say="bubble"><span class="en">bubble</span><span class="ipa">ˈbʌbə<span class="ph darkl">l</span></span></button><span class="punct">.</span>
+          <button class="word say" data-say="They"><span class="en">They</span><span class="ipa">ðeɪ</span></button>
+          <button class="word say" data-say="warn"><span class="en">warn</span><span class="ipa">wɔːrn</span></button>
+          <button class="word say" data-say="that"><span class="en">that</span><span class="ipa">ðæt</span></button>
+          <button class="word say" data-say="prices"><span class="en">prices</span><span class="ipa">ˈpr<span class="ph vai">aɪ</span>s<span class="ph vi">ɪ</span><span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="may"><span class="en">may</span><span class="ipa">meɪ</span></button>
+          <button class="word say" data-say="have"><span class="en">have</span><span class="ipa">hæv</span></button>
+          <button class="word say" data-say="risen"><span class="en">risen</span><span class="ipa">ˈr<span class="ph vi">ɪ</span>zən</span></button>
+          <button class="word say" data-say="faster"><span class="en">faster</span><span class="ipa">ˈfæstər</span></button>
+          <button class="word say" data-say="than"><span class="en">than</span><span class="ipa">ðæn</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="real"><span class="en">real</span><span class="ipa">riː<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="value"><span class="en">value</span><span class="ipa">ˈvæljuː</span></button>
+          <button class="word say" data-say="these"><span class="en">these</span><span class="ipa">ðiː<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="companies"><span class="en">companies</span><span class="ipa">ˈkʌmpəni<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="create"><span class="en">create</span><span class="ipa">kriˈeɪt</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 6 -->
+      <section class="para">
+        <p class="para-no"><b>06</b>第六段 · 不只是钱的问题</p>
+        <div class="stanza">
+          <button class="word say" data-say="The"><span class="en">The</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="worry"><span class="en">worry</span><span class="ipa">ˈwɜːri</span></button>
+          <button class="word say" data-say="is"><span class="en">is</span><span class="ipa"><span class="ph vi">ɪ</span><span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="not"><span class="en">not</span><span class="ipa">nɑːt</span></button>
+          <button class="word say" data-say="only"><span class="en">only</span><span class="ipa">ˈoʊnli</span></button>
+          <button class="word say" data-say="about"><span class="en">about</span><span class="ipa">əˈbaʊt</span></button>
+          <button class="word say" data-say="money"><span class="en">money</span><span class="ipa">ˈmʌni</span></button><span class="punct">.</span>
+          <button class="word say" data-say="Across"><span class="en">Across</span><span class="ipa">əˈkrɔːs</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="country"><span class="en">country</span><span class="ipa">ˈkʌntri</span></button><span class="punct">,</span>
+          <button class="word say" data-say="local"><span class="en">local</span><span class="ipa">ˈloʊkə<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="communities"><span class="en">communities</span><span class="ipa">kəˈmjuːnəti<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="are"><span class="en">are</span><span class="ipa">ɑːr</span></button>
+          <button class="word say" data-say="pushing"><span class="en">pushing</span><span class="ipa">ˈpʊʃ<span class="ph vi">ɪ</span>ŋ</span></button>
+          <button class="word say" data-say="back"><span class="en">back</span><span class="ipa">bæk</span></button>
+          <button class="word say" data-say="against"><span class="en">against</span><span class="ipa">əˈɡɛnst</span></button>
+          <button class="word say" data-say="new"><span class="en">new</span><span class="ipa">nuː</span></button>
+          <button class="word say" data-say="data"><span class="en">data</span><span class="ipa">ˈdeɪtə</span></button>
+          <button class="word say" data-say="centers"><span class="en">centers</span><span class="ipa">ˈsɛntər<span class="ph voiced">z</span></span></button><span class="punct">,</span>
+          <button class="word say" data-say="which"><span class="en">which</span><span class="ipa">w<span class="ph vi">ɪ</span>tʃ</span></button>
+          <button class="word say" data-say="use"><span class="en">use</span><span class="ipa">juː<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="a"><span class="en">a</span><span class="ipa">ə</span></button>
+          <button class="word say" data-say="lot"><span class="en">lot</span><span class="ipa">lɑːt</span></button>
+          <button class="word say" data-say="of"><span class="en">of</span><span class="ipa">əv</span></button>
+          <button class="word say" data-say="electricity"><span class="en">electricity</span><span class="ipa"><span class="ph vi">ɪ</span>ˌlɛkˈtr<span class="ph vi">ɪ</span>səti</span></button>
+          <button class="word say" data-say="and"><span class="en">and</span><span class="ipa">ænd</span></button>
+          <button class="word say" data-say="water"><span class="en">water</span><span class="ipa">ˈwɔːtər</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 7 -->
+      <section class="para">
+        <p class="para-no"><b>07</b>第七段 · 人才流向初创</p>
+        <div class="stanza">
+          <button class="word say" data-say="At"><span class="en">At</span><span class="ipa">æt</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="same"><span class="en">same</span><span class="ipa">seɪm</span></button>
+          <button class="word say" data-say="time"><span class="en">time</span><span class="ipa">t<span class="ph vai">aɪ</span>m</span></button><span class="punct">,</span>
+          <button class="word say" data-say="several"><span class="en">several</span><span class="ipa">ˈsɛvərə<span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="well known"><span class="en">well-known</span><span class="ipa">ˌwɛ<span class="ph darkl">l</span>ˈnoʊn</span></button>
+          <button class="word say" data-say="researchers"><span class="en">researchers</span><span class="ipa">r<span class="ph vi">ɪ</span>ˈsɜːrtʃər<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="have"><span class="en">have</span><span class="ipa">hæv</span></button>
+          <button class="word say" data-say="left"><span class="en">left</span><span class="ipa">lɛft</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="giants"><span class="en">giants</span><span class="ipa">ˈdʒ<span class="ph vai">aɪ</span>ənt<span class="ph voiceless">s</span></span></button>
+          <button class="word say" data-say="to"><span class="en">to</span><span class="ipa">tuː</span></button>
+          <button class="word say" data-say="join"><span class="en">join</span><span class="ipa">dʒɔɪn</span></button>
+          <button class="word say" data-say="smaller"><span class="en">smaller</span><span class="ipa">ˈsmɔːlər</span></button>
+          <button class="word say" data-say="startups"><span class="en">startups</span><span class="ipa">ˈstɑːrtʌp<span class="ph voiceless">s</span></span></button><span class="punct">.</span>
+          <button class="word say" data-say="This"><span class="en">This</span><span class="ipa">ð<span class="ph vi">ɪ</span>s</span></button>
+          <button class="word say" data-say="raises"><span class="en">raises</span><span class="ipa">ˈreɪz<span class="ph vi">ɪ</span><span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="questions"><span class="en">questions</span><span class="ipa">ˈkwɛstʃən<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="about"><span class="en">about</span><span class="ipa">əˈbaʊt</span></button>
+          <button class="word say" data-say="who"><span class="en">who</span><span class="ipa">huː</span></button>
+          <button class="word say" data-say="will"><span class="en">will</span><span class="ipa">w<span class="ph vi">ɪ</span><span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="lead"><span class="en">lead</span><span class="ipa">liːd</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="A I"><span class="en">AI</span><span class="ipa">ˌeɪˈ<span class="ph vai">aɪ</span></span></button>
+          <button class="word say" data-say="race"><span class="en">race</span><span class="ipa">reɪs</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+      <!-- PARAGRAPH 8 -->
+      <section class="para">
+        <p class="para-no"><b>08</b>第八段 · 短暂回调还是转折?</p>
+        <div class="stanza">
+          <button class="word say" data-say="For"><span class="en">For</span><span class="ipa">fɔːr</span></button>
+          <button class="word say" data-say="now"><span class="en">now</span><span class="ipa">naʊ</span></button><span class="punct">,</span>
+          <button class="word say" data-say="no"><span class="en">no</span><span class="ipa">noʊ</span></button>
+          <button class="word say" data-say="one"><span class="en">one</span><span class="ipa">wʌn</span></button>
+          <button class="word say" data-say="knows"><span class="en">knows</span><span class="ipa">noʊ<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="if"><span class="en">if</span><span class="ipa"><span class="ph vi">ɪ</span>f</span></button>
+          <button class="word say" data-say="this"><span class="en">this</span><span class="ipa">ð<span class="ph vi">ɪ</span>s</span></button>
+          <button class="word say" data-say="is"><span class="en">is</span><span class="ipa"><span class="ph vi">ɪ</span><span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="a"><span class="en">a</span><span class="ipa">ə</span></button>
+          <button class="word say" data-say="short"><span class="en">short</span><span class="ipa">ʃɔːrt</span></button>
+          <button class="word say" data-say="pause"><span class="en">pause</span><span class="ipa">pɔː<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="or"><span class="en">or</span><span class="ipa">ɔːr</span></button>
+          <button class="word say" data-say="the"><span class="en">the</span><span class="ipa">ðə</span></button>
+          <button class="word say" data-say="start"><span class="en">start</span><span class="ipa">stɑːrt</span></button>
+          <button class="word say" data-say="of"><span class="en">of</span><span class="ipa">əv</span></button>
+          <button class="word say" data-say="something"><span class="en">something</span><span class="ipa">ˈsʌmθ<span class="ph vi">ɪ</span>ŋ</span></button>
+          <button class="word say" data-say="bigger"><span class="en">bigger</span><span class="ipa">ˈb<span class="ph vi">ɪ</span>ɡər</span></button><span class="punct">.</span>
+          <button class="word say" data-say="Investors"><span class="en">Investors</span><span class="ipa"><span class="ph vi">ɪ</span>nˈvɛstər<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="will"><span class="en">will</span><span class="ipa">w<span class="ph vi">ɪ</span><span class="ph darkl">l</span></span></button>
+          <button class="word say" data-say="watch"><span class="en">watch</span><span class="ipa">wɑːtʃ</span></button>
+          <button class="word say" data-say="closely"><span class="en">closely</span><span class="ipa">ˈkloʊsli</span></button>
+          <button class="word say" data-say="to"><span class="en">to</span><span class="ipa">tuː</span></button>
+          <button class="word say" data-say="see"><span class="en">see</span><span class="ipa">siː</span></button>
+          <button class="word say" data-say="what"><span class="en">what</span><span class="ipa">wʌt</span></button>
+          <button class="word say" data-say="comes"><span class="en">comes</span><span class="ipa">kʌm<span class="ph voiced">z</span></span></button>
+          <button class="word say" data-say="next"><span class="en">next</span><span class="ipa">nɛkst</span></button><span class="punct">.</span>
+        </div>
+      </section>
+
+    </div><!-- /.reader -->
+
+    <!-- DRILL LISTS -->
+    <section class="drill-head">
+      <h2>针对性跟读清单</h2>
+      <p>把你正在练的三类音从原文里拎出来,集中读。每个词也可以点开听音。</p>
+    </section>
+
+    <div class="cards">
+
+      <!-- Dark L -->
+      <article class="card t-darkl">
+        <p class="tag">Dark L</p>
+        <h3>词尾的 L · 暗 L</h3>
+        <div class="row">
+          <p class="rl">词尾 / 辅音前的 dark L(舌后抬高,像含一个 "o")</p>
+          <div class="terms">
+            <button class="term say" data-say="fell"><span class="te">fell</span><span class="ti">fɛl</span></button>
+            <button class="term say" data-say="full"><span class="te">full</span><span class="ti">fʊl</span></button>
+            <button class="term say" data-say="single"><span class="te">single</span><span class="ti">ˈsɪŋɡəl</span></button>
+            <button class="term say" data-say="bubble"><span class="te">bubble</span><span class="ti">ˈbʌbəl</span></button>
+            <button class="term say" data-say="real"><span class="te">real</span><span class="ti">riːl</span></button>
+            <button class="term say" data-say="will"><span class="te">will</span><span class="ti">wɪl</span></button>
+            <button class="term say" data-say="several"><span class="te">several</span><span class="ti">ˈsɛvərəl</span></button>
+            <button class="term say" data-say="local"><span class="te">local</span><span class="ti">ˈloʊkəl</span></button>
+            <button class="term say" data-say="artificial"><span class="te">artificial</span><span class="ti">ˌɑːrtɪˈfɪʃəl</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl">辅音前的 dark L(almost、building、well-known、Alphabet's)</p>
+          <div class="terms">
+            <button class="term say" data-say="almost"><span class="te">a<u>l</u>most</span><span class="ti">ˈɔːlmoʊst</span></button>
+            <button class="term say" data-say="building"><span class="te">bui<u>l</u>ding</span><span class="ti">ˈbɪldɪŋ</span></button>
+            <button class="term say" data-say="well known"><span class="te">we<u>l</u>l-known</span><span class="ti">ˌwɛlˈnoʊn</span></button>
+            <button class="term say" data-say="Alphabet's"><span class="te">A<u>l</u>phabet's</span><span class="ti">ˈælfəbɛts</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl">🔇 看到 L,但不发音</p>
+          <div class="terms">
+            <button class="term say" data-say="half"><span class="te">ha<u>l</u>f</span><span class="ti">hæf</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl">对比 clear L（在元音前,舌尖轻点）</p>
+          <div class="terms">
+            <button class="term say" data-say="last"><span class="te">last</span><span class="ti">læst</span></button>
+            <button class="term say" data-say="lot"><span class="te">lot</span><span class="ti">lɑːt</span></button>
+            <button class="term say" data-say="lead"><span class="te">lead</span><span class="ti">liːd</span></button>
+            <button class="term say" data-say="value"><span class="te">value</span><span class="ti">ˈvæljuː</span></button>
+            <button class="term say" data-say="falling"><span class="te">falling</span><span class="ti">ˈfɔːlɪŋ</span></button>
+          </div>
+        </div>
+        <p class="tip"><strong>感受</strong>:词尾的 L(fell、full、real)和辅音前的 L(almost、building、world)都是 dark——舌后往上压、舌尖可不抵齿龈;clear L(lot、lead)是舌尖轻点后立刻放开。先慢读 <em>fell → will → real</em>。</p>
+      </article>
+
+      <!-- Voicing -->
+      <article class="card t-voice">
+        <p class="tag">清辅音 / 浊辅音</p>
+        <h3>词尾 -s / -ed 的清浊</h3>
+        <div class="row">
+          <p class="rl"><span style="color:var(--coral);font-weight:700">-s → /z/</span> · 前面是浊音 → 喉咙振动</p>
+          <div class="terms">
+            <button class="term say" data-say="investors"><span class="te">investors</span><span class="ti">ɪnˈvɛstərz</span></button>
+            <button class="term say" data-say="companies"><span class="te">companies</span><span class="ti">ˈkʌmpəniz</span></button>
+            <button class="term say" data-say="centers"><span class="te">centers</span><span class="ti">ˈsɛntərz</span></button>
+            <button class="term say" data-say="knows"><span class="te">knows</span><span class="ti">noʊz</span></button>
+            <button class="term say" data-say="comes"><span class="te">comes</span><span class="ti">kʌmz</span></button>
+            <button class="term say" data-say="questions"><span class="te">questions</span><span class="ti">ˈkwɛstʃənz</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl"><span style="color:var(--slate);font-weight:700">-s → /s/</span> · 前面是清音 → 只送气</p>
+          <div class="terms">
+            <button class="term say" data-say="stocks"><span class="te">stocks</span><span class="ti">stɑːks</span></button>
+            <button class="term say" data-say="startups"><span class="te">startups</span><span class="ti">ˈstɑːrtʌps</span></button>
+            <button class="term say" data-say="giants"><span class="te">giants</span><span class="ti">ˈdʒaɪənts</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl">-ed → <span style="color:var(--slate);font-weight:700">/t/</span>（清音后） · <span style="color:var(--coral);font-weight:700">/d/</span>（浊音后）</p>
+          <div class="terms">
+            <button class="term say" data-say="dropped"><span class="te">dropped</span><span class="ti">drɑːpt</span></button>
+            <button class="term say" data-say="pushed"><span class="te">pushed</span><span class="ti">pʊʃt</span></button>
+            <button class="term say" data-say="warned"><span class="te">warned</span><span class="ti">wɔːrnd</span></button>
+            <button class="term say" data-say="opened"><span class="te">opened</span><span class="ti">ˈoʊpənd</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl">-ed → <span style="font-weight:700">/ɪd/</span> · 前面是 t/d → 多读一个音节</p>
+          <div class="terms">
+            <button class="term say" data-say="noted"><span class="te">noted</span><span class="ti">ˈnoʊtɪd</span></button>
+            <button class="term say" data-say="needed"><span class="te">needed</span><span class="ti">ˈniːdɪd</span></button>
+          </div>
+        </div>
+        <p class="tip"><strong>规则</strong>:词尾 -s / -ed 跟着前面的音“清浊一致”。手指放喉咙——/z/、/d/ 会震,/s/、/t/ 不震;只有前面是 t/d 时,-ed 才多出一个 /ɪd/ 音节(noted、needed)。</p>
+      </article>
+
+      <!-- /ɪ/ vs /aɪ/ -->
+      <article class="card t-vowel">
+        <p class="tag">/ɪ/ vs /aɪ/</p>
+        <h3>短 i 和滑动 i</h3>
+        <div class="row">
+          <p class="rl"><span style="color:var(--amber-ink);font-weight:700">/ɪ/</span> 短而松（不是中文“衣”）</p>
+          <div class="terms">
+            <button class="term say" data-say="index"><span class="te">index</span><span class="ti">ˈɪndɛks</span></button>
+            <button class="term say" data-say="this"><span class="te">this</span><span class="ti">ðɪs</span></button>
+            <button class="term say" data-say="big"><span class="te">big</span><span class="ti">bɪɡ</span></button>
+            <button class="term say" data-say="single"><span class="te">single</span><span class="ti">ˈsɪŋɡəl</span></button>
+            <button class="term say" data-say="building"><span class="te">building</span><span class="ti">ˈbɪldɪŋ</span></button>
+            <button class="term say" data-say="with"><span class="te">with</span><span class="ti">wɪð</span></button>
+            <button class="term say" data-say="quickly"><span class="te">quickly</span><span class="ti">ˈkwɪkli</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl"><span style="color:var(--indigo);font-weight:700">/aɪ/</span> 滑动双元音（a → ɪ）</p>
+          <div class="terms">
+            <button class="term say" data-say="time"><span class="te">time</span><span class="ti">taɪm</span></button>
+            <button class="term say" data-say="by"><span class="te">by</span><span class="ti">baɪ</span></button>
+            <button class="term say" data-say="rising"><span class="te">rising</span><span class="ti">ˈraɪzɪŋ</span></button>
+            <button class="term say" data-say="giants"><span class="te">giants</span><span class="ti">ˈdʒaɪənts</span></button>
+            <button class="term say" data-say="prices"><span class="te">prices</span><span class="ti">ˈpraɪsɪz</span></button>
+            <button class="term say" data-say="excitement"><span class="te">excitement</span><span class="ti">ɪkˈsaɪtmənt</span></button>
+            <button class="term say" data-say="A I"><span class="te">AI</span><span class="ti">ˌeɪˈaɪ</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <p class="rl">最小对立对 · 读出区别</p>
+          <div class="pair">
+            <button class="term say" data-say="bit"><span class="te">bit</span><span class="ti">bɪt</span></button>
+            <span class="punct" style="padding:0">–</span>
+            <button class="term say" data-say="bite"><span class="te">bite</span><span class="ti">baɪt</span></button>
+            <button class="term say" data-say="fill"><span class="te">fill</span><span class="ti">fɪl</span></button>
+            <span class="punct" style="padding:0">–</span>
+            <button class="term say" data-say="file"><span class="te">file</span><span class="ti">faɪl</span></button>
+            <button class="term say" data-say="rise"><span class="te">rise</span><span class="ti">raɪz</span></button>
+            <span class="punct" style="padding:0">–</span>
+            <button class="term say" data-say="risen"><span class="te">risen</span><span class="ti">ˈrɪzən</span></button>
+          </div>
+        </div>
+        <p class="tip"><strong>注意</strong>:/ɪ/ 几乎每句都有;这次 /aɪ/ 也成对出现——time、by、rising、giants、prices…正好对照练。关键:/ɪ/ 短而松、不上滑;/aɪ/ 要从 /a/ 一路滑到 /ɪ/。</p>
+      </article>
+
+      <!-- Connected speech -->
+      <article class="card t-link">
+        <p class="tag">Connected speech</p>
+        <h3>连读 · 别一个词一个词蹦</h3>
+        <div class="row">
+          <div class="terms">
+            <button class="term say" data-say="a lot of"><span class="te">a&nbsp;lot&nbsp;of</span><span class="ti">ə‿ˈlɑː·təv</span></button>
+            <button class="term say" data-say="start of"><span class="te">start&nbsp;of</span><span class="ti">ˈstɑːr·təv</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="terms">
+            <button class="term say" data-say="this is a"><span class="te">this&nbsp;is&nbsp;a</span><span class="ti">ˈðɪ·s‿ɪ·zə</span></button>
+            <button class="term say" data-say="more than"><span class="te">more&nbsp;than</span><span class="ti">ˈmɔːr·ðən</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="terms">
+            <button class="term say" data-say="grown too fast"><span class="te">grown&nbsp;too&nbsp;fast</span><span class="ti">ɡroʊn·tuː·ˈfæst</span></button>
+          </div>
+        </div>
+        <p class="tip"><strong>窍门</strong>:前一个词的尾辅音滑进下一个词的元音(a&nbsp;lot&nbsp;of → ə‿lɑː·təv;start&nbsp;of → stɑːr·təv),让它们连成一串,不要在每个词后面停。</p>
+      </article>
+
+    </div>
+
+    <footer>
+      <p>🔊 点任意单词或词组听美式发音(浏览器内置语音,效果因设备而异)。键盘:<span class="k">Tab</span> 移动、<span class="k">Enter</span> 或 <span class="k">Space</span> 朗读。</p>
+      <p><a href="#view-calendar" style="color:var(--teal);font-weight:600;text-decoration:none">← 返回 10 天日历</a></p>
+      <p class="nospeak">当前浏览器不支持朗读功能,音标和高亮仍可正常使用。</p>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ---------- View routing (calendar <-> day) ---------- */
+  function showView(id){
+    var views = document.querySelectorAll('.view');
+    var target = document.getElementById(id);
+    if(!target){ target = document.getElementById('view-calendar'); }
+    views.forEach(function(v){ v.classList.toggle('active', v===target); });
+    window.scrollTo(0,0);
+  }
+  function route(){
+    var h = (location.hash || '').replace('#','');
+    showView(h && document.getElementById(h) ? h : 'view-calendar');
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ---------- Per-day focus filter ---------- */
+  var FX = {'clean':'', 'darkl':'fx-darkl', 'voice':'fx-voice', 'vowel':'fx-vowel'};
+  document.querySelectorAll('.day-view').forEach(function(dv){
+    var reader = dv.querySelector('.reader');
+    var legend = dv.querySelector('.legend');
+    var chips  = Array.prototype.slice.call(dv.querySelectorAll('.chip'));
+    if(!reader) return;
+    function count(sel){ return reader.querySelectorAll(sel).length; }
+    function legendHTML(fx){
+      if(fx==='darkl'){
+        return '<span><span class="sw" style="background:var(--teal)"></span>词尾 dark L · <b>'+count('.ph.darkl')+'</b></span>'+
+               '<span><span class="dash-key">拼写有 L 但不发音</span> · <b>'+dv.querySelectorAll('.word.silentl').length+'</b></span>';
+      }
+      if(fx==='voice'){
+        return '<span><span class="sw" style="background:var(--coral)"></span>浊 /z/ /d/ · <b>'+count('.ph.voiced')+'</b></span>'+
+               '<span><span class="sw" style="background:var(--slate)"></span>清 /s/ /t/ · <b>'+count('.ph.voiceless')+'</b></span>';
+      }
+      if(fx==='vowel'){
+        return '<span><span class="sw" style="background:var(--amber)"></span>/ɪ/ · <b>'+count('.ph.vi')+'</b></span>'+
+               '<span><span class="sw" style="background:var(--indigo)"></span>/aɪ/ · <b>'+count('.ph.vai')+'</b></span>';
+      }
+      return '<span>点任意单词朗读 · 用上面的开关聚焦某个音</span>';
+    }
+    function setFocus(fx){
+      reader.className = 'reader ' + (FX[fx] || '');
+      chips.forEach(function(c){ c.setAttribute('aria-pressed', c.dataset.fx===fx ? 'true':'false'); });
+      if(legend) legend.innerHTML = legendHTML(fx);
+    }
+    chips.forEach(function(c){ c.addEventListener('click', function(){ setFocus(c.dataset.fx); }); });
+    setFocus('clean');
+  });
+
+  /* ---------- Click-to-hear (Web Speech API) ---------- */
+  var synth = window.speechSynthesis;
+  if(!synth){ document.querySelectorAll('.nospeak').forEach(function(n){ n.style.display='block'; }); route(); return; }
+
+  var voice = null;
+  function pickVoice(){
+    var vs = synth.getVoices();
+    if(!vs.length) return null;
+    var us = vs.filter(function(v){ return /en[-_]US/i.test(v.lang); });
+    var pool = us.length ? us : vs.filter(function(v){ return /^en/i.test(v.lang); });
+    if(!pool.length) pool = vs;
+    var pref = ['Samantha','Google US English','Microsoft Aria','Microsoft Jenny','Microsoft Zira','Alex','Ava'];
+    for(var i=0;i<pref.length;i++){
+      var m = pool.filter(function(v){ return v.name.indexOf(pref[i])>=0; })[0];
+      if(m) return m;
+    }
+    return pool[0];
+  }
+  function loadVoice(){ voice = pickVoice(); }
+  loadVoice();
+  if(synth.onvoiceschanged !== undefined){ synth.onvoiceschanged = loadVoice; }
+
+  function speak(el){
+    var text = el.getAttribute('data-say');
+    if(!text) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = 0.92; u.pitch = 1;
+    if(!voice) loadVoice();
+    if(voice) u.voice = voice;
+    el.classList.add('speaking');
+    u.onend = u.onerror = function(){ el.classList.remove('speaking'); };
+    synth.speak(u);
+  }
+  document.querySelectorAll('.say').forEach(function(el){
+    el.setAttribute('aria-label', el.getAttribute('data-say') + ' — 点击朗读');
+    el.addEventListener('click', function(){ speak(el); });
+  });
+
+  /* ---------- init route ---------- */
+  route();
+})();
+</script>
+</body>
+</html>
